@@ -14,8 +14,8 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        // Backend Express server (see backend/server.js uses PORT || 5000)
-        target: 'http://localhost:5000',
+        // Backend Express (default port 5001)
+        target: 'http://localhost:5001',
         changeOrigin: true,
       },
     },

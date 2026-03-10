@@ -8,8 +8,8 @@ if (rawBaseUrl) {
   const trimmed = rawBaseUrl.replace(/\/$/, '')
   API_BASE_URL = trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
 } else {
-  // Default: use Vite dev proxy (`/api`) or Express backend URL in production
-  API_BASE_URL = import.meta.env.DEV ? '/api' : 'http://localhost:5000/api'
+  // Dev: Vite proxy. Production/single-server: same origin = /api (no CORS)
+  API_BASE_URL = import.meta.env.DEV ? '/api' : '/api'
 }
 
 export const apiClient = axios.create({

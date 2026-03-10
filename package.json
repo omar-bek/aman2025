@@ -1,0 +1,12 @@
+{
+  "name": "amanatak",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend && npm run build",
+    "serve": "npm run build && cd backend && node server.js",
+    "start": "cd backend && node server.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev"
+  },
+  "description": "AMANATAK - نظام إدارة المدرسة وتتبع سلامة الطلاب"
+}

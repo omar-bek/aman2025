@@ -26,27 +26,28 @@ app.use(
     }),
 );
 
-const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000')
+const defaultOrigins = 'http://localhost:3000,http://localhost:5000,http://localhost:5001,http://127.0.0.1:3000,http://127.0.0.1:5000,http://127.0.0.1:5001';
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || defaultOrigins)
     .split(',')
-    .map((o) => o.trim());
+    .map((o) => o.trim())
+    .filter(Boolean);
 
 app.use(
     cors({
         origin(origin, callback) {
-            if (!origin || allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
+            if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+            if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
             return callback(new Error('Not allowed by CORS'));
         },
         credentials: true,
     }),
 );
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Routes
+// API Routes (must be before static/SPA so /api/* is handled correctly)
+const path = require('path');
 const authRoutes = require('./routes/auth');
 const studentsRoutes = require('./routes/students');
 const busRoutes = require('./routes/buses');
@@ -90,6 +91,13 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'OK', message: 'Amantac API is running' });
 });
 
+// Frontend: serve built React app (same server = single deployment)
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
 // Error handler (must be last)
 const errorHandler = require('./middleware/errorHandler');
 app.use(errorHandler);
@@ -120,11 +128,25 @@ mongoose
         process.exit(1);
     });
 
-const PORT = process.env.PORT || 5001;
+const rawPort = process.env.PORT;
+const basePort = (typeof rawPort === 'string' && /^\d+$/.test(rawPort.trim()))
+    ? parseInt(rawPort.trim(), 10)
+    : 5000;
 
-server.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📚 API Documentation: http://localhost:${PORT}/api/health`);
-});
+function tryListen(port) {
+    server.listen(port, () => {
+        console.log(`🚀 Server running on port ${port}`);
+        console.log(`📚 API: http://localhost:${port}/api/health`);
+    }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE' && port < basePort + 20) {
+            console.warn(`Port ${port} in use, trying ${port + 1}...`);
+            tryListen(port + 1);
+        } else {
+            console.error(err);
+            process.exit(1);
+        }
+    });
+}
+tryListen(basePort);
 
 module.exports = { app, io };
