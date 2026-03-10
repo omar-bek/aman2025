@@ -45,13 +45,14 @@ exports.register = asyncHandler(async (req, res, next) => {
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
+  const loginId = email || username;
 
-  if (!email || !password) {
+  if (!loginId || !password) {
     return next(new ErrorResponse('Please provide an email and password', 400));
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email: loginId }).select('+password');
 
   if (!user) {
     await logAudit({
@@ -94,10 +95,13 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @access  Private
 exports.getMe = asyncHandler(async (req, res, next) => {
   const user = await User.findById(req.user.id).populate('studentIds');
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
 
   res.status(200).json({
     success: true,
-    data: user
+    data: toFrontendUser(user)
   });
 });
 
@@ -118,7 +122,7 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: user
+    data: toFrontendUser(user)
   });
 });
 
@@ -205,6 +209,7 @@ exports.logout = asyncHandler(async (req, res) => {
 });
 
 // Issue tokens, set cookies, and return safe user payload
+// Shape must match frontend User interface: id, name, email, role, full_name?, phone?
 const sendTokenResponse = (user, statusCode, res) => {
   const payload = { id: user._id.toString(), role: user.role };
   const accessToken = signAccessToken(payload);
@@ -212,15 +217,22 @@ const sendTokenResponse = (user, statusCode, res) => {
 
   setAuthCookies(res, accessToken, refreshToken);
 
-  // Keep response backward compatible with existing frontend (token in body)
+  const userPayload = toFrontendUser(user);
   res.status(statusCode).json({
     success: true,
     token: accessToken,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role
-    }
+    user: userPayload
   });
 };
+
+function toFrontendUser(user) {
+  const u = user.toObject ? user.toObject() : user;
+  return {
+    id: u._id?.toString() ?? u.id,
+    name: u.name ?? '',
+    email: u.email ?? '',
+    role: u.role ?? 'parent',
+    full_name: u.full_name ?? u.name ?? '',
+    phone: u.phone ?? ''
+  };
+}

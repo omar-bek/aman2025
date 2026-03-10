@@ -20,9 +20,7 @@ export default function Login() {
 
     try {
       const response = await authAPI.login(formData)
-      console.log('Login response:', response) // Debug log
-      console.log('User role:', response.user.role, typeof response.user.role) // Debug log
-      
+
       // Normalize role to string (handle enum objects)
       let userRole: string
       if (typeof response.user.role === 'string') {
@@ -50,11 +48,15 @@ export default function Login() {
       }
       
       const redirectPath = roleRedirects[userRole] || '/'
-      console.log('Redirecting to:', redirectPath) // Debug log
       navigate(redirectPath, { replace: true })
     } catch (error: any) {
-      console.error('Login error:', error)
-      const errorMessage = error.response?.data?.detail || error.message || 'فشل تسجيل الدخول'
+      const err = error.response?.data
+      const errorMessage =
+        (typeof err?.detail === 'string' ? err.detail : null) ||
+        (typeof err?.message === 'string' ? err.message : null) ||
+        (Array.isArray(err?.errors) && err.errors[0]?.message ? err.errors[0].message : null) ||
+        error.message ||
+        'فشل تسجيل الدخول'
       toast.error(errorMessage)
     } finally {
       setLoading(false)
