@@ -1,0 +1,17 @@
+export { default as TeacherDashboard } from './TeacherDashboard'
+export { default as TeacherAssignments } from './TeacherAssignments'
+export { default as TeacherEvaluations } from './TeacherEvaluations'
+export { default as TeacherEvaluationNew } from './TeacherEvaluationNew'
+export { default as TeacherEvaluationDetail } from './TeacherEvaluationDetail'
+export { default as TeacherStudentProfile } from './TeacherStudentProfile'
+export { default as TeacherStudents } from './TeacherStudents'
+export { default as TeacherMessages } from './TeacherMessages'
+export { default as TeacherAnnouncements } from './TeacherAnnouncements'
+export { default as TeacherAttendance } from './TeacherAttendance'
+export { default as TeacherExams } from './TeacherExams'
+export { default as ClassInsights } from './ClassInsights'
+export { default as StudentNotes } from './StudentNotes'
+export { default as NotificationsSummary } from './NotificationsSummary'
+export { default as TeacherProfile } from './TeacherProfile'
+// Note: TeacherWorkloadReduction moved to shared
+

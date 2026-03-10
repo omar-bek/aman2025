@@ -1,0 +1,10 @@
+// Re-export all pages from their respective role-based directories
+export * from './auth'
+export * from './parent'
+export * from './teacher'
+export * from './admin'
+export * from './staff'
+export * from './driver'
+export * from './student'
+export * from './super-admin'
+export * from './shared'
